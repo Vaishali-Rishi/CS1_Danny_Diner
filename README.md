@@ -2,7 +2,7 @@
 
 ![logo](https://github.com/user-attachments/assets/a4fdf205-cc93-446a-b0c7-8be9170ceeb1)
 
-You can find all the details here - 
+You can find all the details here - [Link](https://8weeksqlchallenge.com/case-study-1/)
 
 ### Table of Contents:
 - Problem Statement
@@ -320,3 +320,81 @@ ORDER BY
 - Total points for Customer A = 1,370.
 - Total points for Customer B = 820.
 ---
+
+### BONUS QUESTIONS
+
+#### QUESTION: 
+#### Join all the things- Recreate the table output with customer_id,	order_date,	product_name, price, member(Y/N) using the available data.
+
+#### Solution:
+
+```sql
+SELECT 
+    sales.customer_id, 
+    sales.order_date, 
+    menu.product_name, 
+    menu.price,  
+    (CASE
+        WHEN sales.order_date >= members.join_date THEN 'Y'
+        ELSE 'N'
+     END AS member)
+FROM 
+    sales
+LEFT JOIN 
+    menu ON sales.product_id = menu.product_id
+LEFT JOIN 
+    members ON (sales.customer_id = members.customer_id) 
+ORDER BY 
+    sales.customer_id,
+    sales.order_date,
+    menu.product_name;
+```
+### Output:
+
+![B1](https://github.com/user-attachments/assets/3d902d7b-391a-4a18-96ed-3c54382b2833)
+
+---
+
+#### QUESTION: 
+#### Rank all the things- Danny also requires further information about the ranking of customer products, but he purposely does not need the ranking for non-member purchases so he expects null ranking values for the records when customers are not yet part of the loyalty program.
+
+#### Solution:
+
+```sql
+WITH Joined_data AS
+    (SELECT 
+        sales.customer_id, 
+        sales.order_date, 
+        menu.product_name, 
+        menu.price,  
+        (CASE WHEN sales.order_date >= members.join_date THEN 'Y'
+              ELSE 'N'
+        END AS member)
+    FROM 
+        sales
+    LEFT JOIN 
+        menu ON sales.product_id = menu.product_id
+    LEFT JOIN 
+        members ON sales.customer_id = members.customer_id 
+    ORDER BY 
+        sales.customer_id, sales.order_date, menu.product_name)
+
+SELECT
+    customer_id, 
+    order_date, 
+    product_name, 
+    price, 
+    (CASE WHEN member = 'N' THEN NULL
+          ELSE DENSE_RANK() OVER(PARTITION BY customer_id, member ORDER BY order_date)
+     END AS ranking)
+FROM
+    Joined_data
+```
+### Output:
+
+![B2](https://github.com/user-attachments/assets/6015642e-1144-494c-a028-3e8bca0fb807)
+
+
+
+
+
